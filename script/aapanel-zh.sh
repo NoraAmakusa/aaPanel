@@ -1,6 +1,6 @@
 #! /bin/bash
 # By Aaron
-# https://github.com/AaronYES/aapanel
+# https://github.com/AaronYES/aaPanel
 
 #彩色
 red(){
@@ -19,69 +19,80 @@ purple(){
     echo -e "\033[35m\033[01m$1\033[0m"
 }
 
-# 下载aapanel面板
+# 安装aapanel面板
 function aapanel-install(){
 wget -O "/root/aapanel-install.sh" "http://www.aapanel.com/script/install_6.0_en.sh"
-red "下载完成,正在安装官网原版."
+red "正在从官网安装原版aapanel面板."
 bash "/root/aapanel-install.sh"
 }
 
-# 降级aapanel 官网下载(最后一个无广告版本)
-function downgrade-official(){
-wget -O "/root/LinuxPanel_EN-6.8.23.zip" "http://node.aapanel.com/install/update/LinuxPanel_EN-6.8.23.zip"
-blue "下载完成,正在降级."
-unzip LinuxPanel_EN-6.8.23.zip
-cd /root/panel
-wget -O "/root/panel/downgrade.sh" "https://ghproxy.com/https://raw.githubusercontent.com/AaronYES/aapanel/main/downgrade.sh" 
-bash "/root/panel/downgrade.sh"
-red "降级成功."
-rm /root/LinuxPanel_EN-6.8.23.zip /root/panel/ -rf
+# 安装bt面板
+function bt-install(){  
+wget -O "/root/bt-install.sh" "http://download.bt.cn/install/install_6.0.sh"
+red "正在从官网安装原版宝塔面板.."
+bash "/root/bt-install.sh"
 }
 
 # 降级aapanel GitHub下载 (最后一个无广告版本)
-function downgrade-github(){
+function downgrade-aapanel(){
 wget -O "/root/LinuxPanel_EN-6.8.23.zip" "https://ghproxy.com/https://github.com/AaronYES/aapanel/releases/download/1.0/LinuxPanel_EN-6.8.23.zip"
-blue "下载完成,正在降级."
+red "下载完成,正在降级."
 unzip LinuxPanel_EN-6.8.23.zip
 cd /root/panel
-wget -O "/root/panel/downgrade.sh" "https://ghproxy.com/https://raw.githubusercontent.com/AaronYES/aapanel/main/downgrade.sh" 
+wget -O "/root/panel/downgrade.sh" "https://ghproxy.com/https://raw.githubusercontent.com/AaronYES/aapanel/main/script/downgrade.sh" 
 bash "/root/panel/downgrade.sh"
 red "降级成功."
 rm /root/LinuxPanel_EN-6.8.23.zip /root/panel/ -rf
 }
 
-# aapanel 开心
-function aapanel-happy(){
+## 降级宝塔面板
+function downgrade-bt(){
+wget -O "/root/LinuxPanel-7.7.0.zip" "https://ghproxy.com/https://github.com/AaronYES/aaPanel/releases/download/1.3/LinuxPanel-7.7.0.zip"
+blue "下载完成,正在降级."
+unzip LinuxPanel-7.7.0.zip
+cd /root/panel
+bash /root/panel/update.sh
+red "降级成功."
+rm /root/LinuxPanel-7.7.0.zip /root/panel/ -rf
+sed -i "s|bind_user == 'True'|bind_user == 'Close'|" /www/server/panel/BTPanel/static/js/index.js
+rm -f /www/server/panel/data/bind.pl
+red "屏蔽绑定成功."
+}
+
+# 破解付费
+function panel-happy(){
+red "执行之前请手动打开一次软件商店"
 sed -i 's|"endtime": -1|"endtime": 999999999999|g' /www/server/panel/data/plugin.json
 sed -i 's|"pro": -1|"pro": 0|g' /www/server/panel/data/plugin.json
-chmod 400 /www/server/panel/data/plugin.json
-red "如果报错提示没有找到目录请登陆面板点击一下商店重新运行此条即可"
-red "好开心 ٩(ˊᗜˋ*)و."
+chattr +i /www/server/panel/data/plugin.json
+chattr -i /www/server/panel/data/repair.json
+rm /www/server/panel/data/repair.json
+cd /www/server/panel/data
+wget https://ghproxy.com/https://raw.githubusercontent.com/AaronYES/aaPanel/main/resource/repair.json
+chattr +i /www/server/panel/data/repair.json
+red "开心成功."
 }
 
 # 清理垃圾
 function clean-up-trash(){
-rm LinuxPanel_EN-6.8.23.zip aapanel-zh-CN.tar.gz chinese.zip aapanel-install.sh bt-uninstall.sh panel/ -rf
+rm LinuxPanel_EN-6.8.23.zip aapanel-zh-CN.tar.gz chinese.zip aapanel-install.sh bt-install.sh bt-uninstall.sh panel/ -rf
 red "清理成功."
 red "如果想删除此脚本 请执行 rm aapanel.sh -rf "
 }
 
-# 卸载 aaPanel
+# 卸载 面板
 function uninstall(){
 wget -O "/root/bt-uninstall.sh" "http://download.bt.cn/install/bt-uninstall.sh"
 bash "/root/bt-uninstall.sh"
-red "卸载aaPanel成功."
+red "面板卸载成功."
 }
 
-# 汉化 sinicization
-function sinicization(){
-wget -O "/root/aapanel-zh-CN.tar.gz" "https://ghproxy.com/https://github.com/AaronYES/aapanel/releases/download/1.1/aapanel-zh-CN.tar.gz"
-tar -zxvf aapanel-zh-CN.tar.gz
-mv /root/server/panel/BTpanel/static/language/English/* /www/server/panel/BTPanel/static/language/English/
-mv /root/server/panel/config/menu.json /www/server/panel/config/
-rm /root/server/ -rf
-/etc/init.d/bt restart
-red "汉化aaPanel成功."
+# 删掉日志文件，并且锁定文件防止写入
+function log(){
+echo "" > /www/server/panel/script/site_task.py
+chattr +i /www/server/panel/script/site_task.py
+rm -rf /www/server/panel/logs/request/*
+chattr +i -R /www/server/panel/logs/request
 }
 
 function sinicization-gacjie(){
@@ -97,17 +108,18 @@ red "汉化aaPanel成功."
 function start_menu(){
     clear
     purple " 感谢使用aaPanel小助手."
-    purple " https://github.com/AaronYES/aapanel"
+    purple " https://github.com/AaronYES/aaPanel"
     yellow " ————————————————————————————————————————————————"
     green " 1. CentOS/Debian/Ubuntu 安装 aaPanel"
+    green " 2. CentOS/Debian/Ubuntu 安装 宝塔面板"
     yellow " ————————————————————————————————————————————————"
-    green " 2. 降级 6.8.23 版本 aaPanel(官网)"
-    green " 3. 降级 6.8.23 版本 aaPanel(GitHub仓库)"
-    green " 4. 开心一下٩(ˊᗜˋ*)و"
-    green " 5. 汉化 aaPanel "
-    green " 6. 汉化 aaPanel (文件来自gitee汉化完整一些)"
+    green " 3. 降级 6.8.23 版本 aaPanel"
+    green " 4. 降级 7.7.0  版本 宝塔面板"
+    green " 5. 开心破解"
+    green " 6. 汉化 aaPanel (文件来自Gitee)"
+    green " 7. 删除日志文件，锁定文件写入权限"
     yellow " ————————————————————————————————————————————————"
-    green " 8. 卸载 aaPanel"
+    green " 8. 卸载面板"
     green " 9. 清理脚本产生垃圾文件"
     green " 0. 退出脚本"
 
@@ -118,19 +130,22 @@ function start_menu(){
            aapanel-install
 	    ;;
         2 )
-           downgrade-official
+           bt-install
         ;;
         3 )
-           downgrade-github
+           downgrade-aapanel
         ;;
         4 )
-           aapanel-happy
+           downgrade-bt
         ;;
         5 )
-           sinicization
+           panel-happy
         ;;
         6 )
            sinicization-gacjie
+        ;;
+        7 )
+           log
         ;;
         8 )
            uninstall
